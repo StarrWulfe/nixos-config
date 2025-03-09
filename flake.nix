@@ -1,5 +1,5 @@
 {
-  description = "psiri's custom nixos config flake";
+  description = "starrwulfe's custom nixos config flake";
 
   inputs = {
     # Nixpkgs
@@ -50,7 +50,7 @@
     impermanence,
     ...
   } @ inputs: let
-    user = "psiri"; # FIXME set your username
+    user = "j7"; # FIXME set your username
     plymouth_theme = "deus_ex"; # device specific?
 
     inherit (self) outputs;
@@ -88,7 +88,7 @@
     # Available through 'nixos-rebuild --flake .#your-hostname'
     nixosConfigurations = {
       # FIXME replace with your hostname
-      ll-nix1 = nixpkgs.lib.nixosSystem {
+      ll-nix1 = nixpkgs.lib.nixosSystem { #generic. copy and reuse.
         specialArgs = {inherit nix-colors user plymouth_theme inputs outputs;};
         modules = [
           ./hosts/ll-nix1                           # > Our host-specific nixos configuration file <
@@ -96,6 +96,28 @@
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
           impermanence.nixosModules.impermanence
+
+          home-manager.nixosModules.home-manager {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = {inherit nix-colors inputs;};
+              users.${user}.imports = [];
+            };
+          }
+        ];
+      };
+      toyoko-nix = nixpkgs.lib.nixosSystem { #fw16 laptop.
+        specialArgs = {inherit nix-colors user plymouth_theme inputs outputs;};
+        system = "x86_64-Linux";
+        modules = [
+          ./hosts/toyoko-nix                          # > Our host-specific nixos configuration file <
+          ./modules/security-hardening/default.nix  # Security hardening module
+          disko.nixosModules.disko
+          sops-nix.nixosModules.sops
+          #impermanence.nixosModules.impermanence
+          hardware.nixosModules.framework-16-7040-amd
+
 
           home-manager.nixosModules.home-manager {
             home-manager = {
@@ -129,7 +151,26 @@
           }
         ];
       };
-      desktop-nix = nixpkgs.lib.nixosSystem {
+      bulma-nix = nixpkgs.lib.nixosSystem { # eventually for that macbook pro I need to convert
+        specialArgs = {inherit nix-colors user plymouth_theme inputs outputs;};
+        modules = [
+          ./hosts/bulma-nix                       # > Our host-specific nixos configuration file <
+          ./modules/security-hardening/default.nix  # Security hardening module
+          disko.nixosModules.disko
+          sops-nix.nixosModules.sops
+          impermanence.nixosModules.impermanence
+
+          home-manager.nixosModules.home-manager {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              extraSpecialArgs = {inherit nix-colors inputs;};
+              users.${user}.imports = [];
+            };
+          }
+        ];
+      };
+      desktop-nix = nixpkgs.lib.nixosSystem { #generic. copy and use a different hostname.
         specialArgs = {inherit nix-colors user plymouth_theme inputs outputs;};
         modules = [
           ./hosts/desktop-nix                       # > Our host-specific nixos configuration file <
@@ -148,7 +189,7 @@
           }
         ];
       };
-      server-nix = nixpkgs.lib.nixosSystem {
+      server-nix = nixpkgs.lib.nixosSystem { #generic. copy & use a different hostname.
         specialArgs = {inherit nix-colors user plymouth_theme inputs outputs;};
         modules = [
           ./hosts/server-nix                        # > Our host-specific nixos configuration file <
